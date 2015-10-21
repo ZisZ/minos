@@ -226,4 +226,5 @@ def update_status_in_process(output_queue, task_data):
     logger.info("usage: %r", resource.getrusage(resource.RUSAGE_SELF))
   except Exception as e:
     logger.warning("Failed to update status: %r", e)
-
+  finally:
+    output_queue.put(QueueTask(STATUS_TASK_TYPE, None))

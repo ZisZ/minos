@@ -202,7 +202,6 @@ class StatusUpdater:
       input_queue.put(QueueTask(STATUS_TASK_TYPE, None))
     except Exception as e:
       logger.warning("Failed to produce status updater task %r", e)
-    finally:
       self.schedule_next_status_update(input_queue)
 
   def schedule_next_status_update(self, input_queue):
@@ -321,6 +320,10 @@ class Command(BaseCommand):
         if queue_task.task_type == METRIC_TASK_TYPE:
           metric_source_id = queue_task.task_data
           self.metric_sources[metric_source_id].schedule_next_fetch(self.input_queue)
+        elif queue_task.task_type == STATUS_TASK_TYPE:
+          self.status_updater.schedule_next_status_update(self.input_queue)
+        elif queue_task.task_type == AGGREGATE_TASK_TYPE:
+          self.region_operation_aggregator.schedule_next_aggregation(self.input_queue)
       except Queue.Empty:
         logger.warning('Output Queue is empty.')
         continue
@@ -349,15 +352,15 @@ class Command(BaseCommand):
     reactor.callLater(self.collector_config.period - 2, self.schedule_next_rolling)
 
     # call status updater task after fetching metrics
-    status_updater = StatusUpdater(self.collector_config)
+    self.status_updater = StatusUpdater(self.collector_config)
     reactor.callLater(self.collector_config.period + 1,
-      status_updater.produce_status_update_task, self.input_queue)
+      self.status_updater.produce_status_update_task, self.input_queue)
 
-    region_operation_aggregator = RegionOperationMetricAggregator(
+    self.region_operation_aggregator = RegionOperationMetricAggregator(
       self.collector_config)
     # we start to aggregate region operation metric after one period
     reactor.callLater(self.collector_config.period + 1,
-      region_operation_aggregator.produce_aggregate_task, self.input_queue)
+      self.region_operation_aggregator.produce_aggregate_task, self.input_queue)
 
     reactor.run()
 

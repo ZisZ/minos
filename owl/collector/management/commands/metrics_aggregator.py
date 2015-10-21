@@ -87,6 +87,5 @@ def aggregate_region_operation_metric_in_process(output_queue, task_data):
       compute_avg_time_and_num_ops_after_aggregation(clusterOperationMetric)
       cluster.operationMetrics = json.dumps(clusterOperationMetric)
       cluster.save()
-  return
 
-
+  output_queue.put(QueueTask(AGGREGATE_TASK_TYPE, None))

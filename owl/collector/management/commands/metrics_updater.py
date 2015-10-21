@@ -285,8 +285,9 @@ def update_metrics_in_process(output_queue, metric_task):
     metric_task.save()
     logger.info("%r spent %f seconds for saving task status",
       metric_task, time.time() - start_time)
-    # just put the corresponding metric_source id back to the output queue
-    output_queue.put(QueueTask(METRIC_TASK_TYPE, metric_task.metric_source_id))
   except Exception, e:
     logger.warning("%r failed to update metric: %r", metric_task, e)
     traceback.print_exc()
+  finally:
+    # just put the corresponding metric_source id back to the output queue
+    output_queue.put(QueueTask(METRIC_TASK_TYPE, metric_task.metric_source_id))
