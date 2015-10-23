@@ -178,7 +178,6 @@ class RegionOperationMetricAggregator:
       input_queue.put(QueueTask(AGGREGATE_TASK_TYPE, None))
     except Exception as e:
       logger.warning("Failed to produce aggregate task %r", e)
-    finally:
       self.schedule_next_aggregation(input_queue)
 
   def schedule_next_aggregation(self, input_queue):
